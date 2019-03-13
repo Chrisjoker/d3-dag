@@ -8,7 +8,9 @@ export default function() {
   let linkData = defaultLinkData;
 
   function dagHierarchy(...data) {
-    if (!data.length) throw new Error("must pass at least one node");
+    if (!data.length) {
+      throw new Error("must pass at least one node");
+    }
     const mapping = {};
     const queue = [];
 
@@ -19,10 +21,24 @@ export default function() {
         res = new Node(did, datum);
         queue.push(res);
         mapping[did] = res;
-      } else if (datum !== res.data) {
+      } else if (!isEquivalent(datum, res.data)) {
         throw new Error("found a duplicate id: " + did);
       }
       return res;
+    }
+
+    function isEquivalent(a, b) {
+      const aProps = Object.keys(a);
+      const bProps = Object.keys(b);
+      if (aProps.length !== bProps.length) {
+        return false;
+      }
+      for (let i = 0; i < aProps.length; i++) {
+        if (aProps[i] !== bProps[i]) {
+          return false;
+        }
+      }
+      return true;
     }
 
     const root = new Node(undefined, undefined);
@@ -31,7 +47,7 @@ export default function() {
     while ((node = queue.pop())) {
       node.children = (children(node.data) || []).map(nodify);
       node._childLinkData = node.children.map((c) =>
-        linkData(node.data, c.data),
+        linkData(node.data, c.data)
       );
     }
 
